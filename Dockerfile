@@ -6,7 +6,7 @@
 #    By: tissad <tissad@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/04 15:05:41 by tissad            #+#    #+#              #
-#    Updated: 2026/03/04 15:12:01 by tissad           ###   ########.fr        #
+#    Updated: 2026/03/04 15:51:35 by tissad           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -24,6 +24,7 @@ RUN apt update && apt install -y \
     ruby \
     net-tools iputils-ping netcat-openbsd \
     nmap tcpdump \
+    iproute2 net-tools \
     file strace ltrace \
     unzip zip \
     binwalk foremost steghide exiftool \

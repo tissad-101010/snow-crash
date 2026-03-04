@@ -6,7 +6,7 @@
 #    By: tissad <tissad@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/04 13:43:53 by tissad            #+#    #+#              #
-#    Updated: 2026/03/04 15:25:54 by tissad           ###   ########.fr        #
+#    Updated: 2026/03/04 15:38:12 by tissad           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -54,9 +54,9 @@ run: create-disk
 		-net user,hostfwd=tcp::4243-:4242 \
 		-enable-kvm
 
-build:
+ctf_build:
 	docker build -t ctf-env .
-ctf_run:build
+ctf_run:ctf_build
 	docker run -it --rm --name ctf-env -p 4244:4242 ctf-env
 ctf_clean:
 	docker rmi ctf-env
