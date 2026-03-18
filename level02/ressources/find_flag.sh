@@ -12,6 +12,9 @@
 #                                                                              #
 # **************************************************************************** #
 
+# copy the pcap file to the current directory
+scp -P 4243 level02@192.168.1.183:level02.pcap .
+
 # to string 
 strings level02.pcap 
 
@@ -24,3 +27,4 @@ tshark -r level02.pcap -z follow,tcp,ascii,0
 # -z : follow tcp stream (le flux de données d'une connexion TCP)
 # ascii : display the data in ascii format
 # 0 : the stream number (the first stream)
+#the mp is ft_waNDReLOL

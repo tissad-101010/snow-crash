@@ -55,8 +55,54 @@ Replace `<hostPort>` and `<guestPort>` with the appropriate port numbers for you
 Replace `<hostPort>` with the port number you specified in the qemu command for port forwarding.
 
 
-- To access the Snow Crash VM via SSH from within the Docker container, use the following command:
+- To access the Snow Crash VM via SSH from the Docker container, use the following command:
 ```bash
-    ssh user@<containerIP> -p <guestPort>
+    # If NAT networking is used: 
+    ssh user@<HostMachineIP> -p <hostPort>
+    # If bridge networking is used:
+    ssh user@<VM_IP_ADDRESS> -p <Port_number>
+    # to find the IP address run the following command:
+    ifconfig #or
+    ip a
 ```
-Replace `<containerIP>` with the IP address of the Docker container and `<guestPort>` with the port number you specified in the qemu command for port forwarding.
+Replace `<HostMachineIP>` with the IP address of the host machine and `<hostPort>` with the port number you specified in the qemu command for port forwarding.
+
+### Level00:
+- use **find** to search everything related to the flag00 user in the machine where level00 has rights:
+```bash
+    RESULT=$(find / -user flag00 2>/dev/null)
+    echo $RESULT
+```
+- we find two files:
+    - /usr/sbin/john 
+    - /rofs/usr/sbin/john
+    - The both files contains the same string: `cdiiddwpgswtgt` which is Caesar code with a shift of 11
+    - so we can decode it to get :  `nottoohardhere` using the script in file `level00/ressources/caesar_decode.sh`:
+```bash
+    # run the following command to decode the string:
+    bash level00/ressources/caesar_decode.sh
+    # the output will be:
+    Decoded content: nottoohardhere
+```
+- This code is the password for the user flag00, so we can use it to swap to the user flag00 and get the flag for level01:
+
+```bash
+    su flag00
+    # enter the password: nottoohardhere
+    # then run the following command to get the flag for level01:
+    getflag
+```
+- The flag for level01 is: `the result of getflag` which is in the file `level00/flag`
+
+### Level01:
+- Swap to the user flag01 and enter the password which is the flag for level01:
+```bash
+    su flag01
+    # enter the password: the result of getflag
+```
+- Find the password for the user flag01:
+```bash
+    PASSWORD=$(cat /etc/passwd | grep flag01 | awk -F: '{print $2}')
+    echo $PASSWORD
+```
+- We get this string: `42hDRfypTqqnw` 
