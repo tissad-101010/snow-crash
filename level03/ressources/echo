@@ -1,0 +1,4 @@
+#!/bin/bash
+# This script will be executed with the privileges of the user flag03
+# We can use it to run the getflag to get the flag for level04
+echo "getflag" > /tmp/echo

