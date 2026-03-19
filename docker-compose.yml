@@ -1,0 +1,14 @@
+
+services:
+  ctf-env:
+    build:
+      context: ./ctf-env
+      dockerfile: Dockerfile
+    container_name: ctf-env
+    image: ctf-env
+    volumes:
+      - .:/home/ctf
+    ports:
+      - "4242:4242"
+    stdin_open: true
+    tty: true

@@ -6,7 +6,7 @@
 #    By: tissad <tissad@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/04 13:43:53 by tissad            #+#    #+#              #
-#    Updated: 2026/03/18 15:41:09 by tissad           ###   ########.fr        #
+#    Updated: 2026/03/19 13:22:26 by tissad           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -55,17 +55,19 @@ run: create-disk
 		-enable-kvm
 
 ctf_build:
-	docker build -t ctf-env .
-ctf_run:ctf_build
-	docker run -it --rm --name ctf -p 4244:4242 ctf-env
-ctf_clean:
-	docker rmi ctf-env
-ctf_prune:
-	docker system prune -a
+	docker compose -f docker-compose.yml build
+ctf_run: ctf_build
+	docker compose -f docker-compose.yml up -d
+	docker exec -it ctf-env /bin/bash
 ctf_up:
-	docker start ctf-env
+	docker compose -f docker-compose.yml up -d
+	docker exec -it ctf-env /bin/bash
 ctf_down:
-	docker stop ctf-env
+	docker compose -f docker-compose.yml down
+ctf_clean: ctf_down
+	docker rmi ctf-env
+ctf_prune: ctf_down
+	docker system prune -a
 
 
 clean:

