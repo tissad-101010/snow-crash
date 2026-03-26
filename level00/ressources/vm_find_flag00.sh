@@ -1,12 +1,12 @@
 # **************************************************************************** #
 #                                                                              #
 #                                                         :::      ::::::::    #
-#    find_flag00.sh                                     :+:      :+:    :+:    #
+#    vm_find_flag00.sh                                  :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
 #    By: tissad <tissad@student.42.fr>              +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/03/06 18:24:12 by tissad            #+#    #+#              #
-#    Updated: 2026/03/06 19:08:22 by tissad           ###   ########.fr        #
+#    Updated: 2026/03/26 09:35:55 by tissad           ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -44,5 +44,6 @@ for FILE in $RESULT; do
     echo "Decoded content: $DECODED"
 done
 
-# decode the Caesar code and print the result
- 
+# the decoded content is nottoohardhere
+#get the flag for level01 using the decoded content as password
+#ssh -p 4243 flag00@localhost 'getflag' 
